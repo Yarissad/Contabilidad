@@ -6,6 +6,26 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 
 const Rentabilidad = () => {
   const { historicalData } = useFinancial();
+
+  // Validar que haya datos históricos
+  if (!historicalData || historicalData.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-lg p-8">
+          <h2 className="text-3xl font-bold mb-2">Análisis de Rentabilidad</h2>
+          <p className="text-green-100">Evaluación de márgenes, ROA, ROE y otros indicadores de desempeño</p>
+        </div>
+        <Card title="Sin Datos">
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">
+              No hay datos históricos disponibles. Por favor, agregue datos en la sección de Datos Históricos.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   const indicadores = calcularIndicadoresRentabilidad(historicalData);
   const ultimoAnio = indicadores[indicadores.length - 1];
 

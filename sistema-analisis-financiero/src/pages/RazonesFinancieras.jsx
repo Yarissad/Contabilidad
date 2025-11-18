@@ -1,11 +1,31 @@
 import { useFinancial } from '../context/FinancialContext';
-import { calcularRazonesFinancieras, formatearPorcentaje } from '../utils/financialCalculations';
+import { calcularRazonesFinancieras, formatearPorcentaje, formatearMoneda } from '../utils/financialCalculations';
 import Card from '../components/common/Card';
 import MetricCard from '../components/common/MetricCard';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 const RazonesFinancieras = () => {
   const { historicalData } = useFinancial();
+
+  // Validar que haya datos históricos
+  if (!historicalData || historicalData.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg shadow-lg p-8">
+          <h2 className="text-3xl font-bold mb-2">Razones Financieras</h2>
+          <p className="text-cyan-100">Análisis de liquidez, endeudamiento y cobertura</p>
+        </div>
+        <Card title="Sin Datos">
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">
+              No hay datos históricos disponibles. Por favor, agregue datos en la sección de Datos Históricos.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   const razones = calcularRazonesFinancieras(historicalData);
   const ultimoAnio = razones[razones.length - 1];
 
