@@ -7,9 +7,10 @@ const Navbar = () => {
     { path: '/', label: 'Dashboard', icon: '📊' },
     { path: '/datos-historicos', label: 'Datos Históricos', icon: '📈' },
     { path: '/proyecciones', label: 'Proyecciones', icon: '🔮' },
+    { path: '/estacionalidad', label: 'Estacionalidad (IVE)', icon: '🌊' },
     { path: '/rentabilidad', label: 'Rentabilidad', icon: '💰' },
     { path: '/van-tir', label: 'VAN y TIR', icon: '📉' },
-    { path: '/razones', label: 'Razones Financieras', icon: '⚖️' },
+    // { path: '/razones', label: 'Razones Financieras', icon: '⚖️' }, // DESHABILITADO
   ];
 
   return (

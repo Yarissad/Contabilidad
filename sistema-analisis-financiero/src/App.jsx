@@ -4,9 +4,10 @@ import Navbar from './components/layout/Navbar';
 import Dashboard from './pages/Dashboard';
 import DatosHistoricos from './pages/DatosHistoricos';
 import Proyecciones from './pages/Proyecciones';
+import Estacionalidad from './pages/Estacionalidad';
 import Rentabilidad from './pages/Rentabilidad';
 import VanTir from './pages/VanTir';
-import RazonesFinancieras from './pages/RazonesFinancieras';
+// import RazonesFinancieras from './pages/RazonesFinancieras'; // DESHABILITADO
 
 function App() {
   return (
@@ -19,9 +20,10 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/datos-historicos" element={<DatosHistoricos />} />
               <Route path="/proyecciones" element={<Proyecciones />} />
+              <Route path="/estacionalidad" element={<Estacionalidad />} />
               <Route path="/rentabilidad" element={<Rentabilidad />} />
               <Route path="/van-tir" element={<VanTir />} />
-              <Route path="/razones" element={<RazonesFinancieras />} />
+              {/* <Route path="/razones" element={<RazonesFinancieras />} /> */} {/* DESHABILITADO */}
             </Routes>
           </main>
         </div>

@@ -6,6 +6,7 @@ import {
   calcularPayback,
   calcularIndiceRentabilidad,
   calcularAnalisisSensibilidad,
+  validarProyectoInversion,
   formatearMoneda,
   formatearPorcentaje
 } from '../utils/financialCalculations';
@@ -44,15 +45,22 @@ const VanTir = () => {
     updateProjectData(formData);
   };
 
-  // Cálculos
-  const van = calcularVAN(formData.inversionInicial, formData.flujosEfectivo, formData.tasaDescuento);
-  const tir = calcularTIR(formData.inversionInicial, formData.flujosEfectivo);
-  const payback = calcularPayback(formData.inversionInicial, formData.flujosEfectivo);
-  const indiceRentabilidad = calcularIndiceRentabilidad(
+  // Validación de datos
+  const validacion = validarProyectoInversion(
+    formData.inversionInicial, 
+    formData.flujosEfectivo, 
+    formData.tasaDescuento
+  );
+
+  // Cálculos (solo si los datos son válidos)
+  const van = validacion.valido ? calcularVAN(formData.inversionInicial, formData.flujosEfectivo, formData.tasaDescuento) : 0;
+  const tir = validacion.valido ? calcularTIR(formData.inversionInicial, formData.flujosEfectivo) : 0;
+  const payback = validacion.valido ? calcularPayback(formData.inversionInicial, formData.flujosEfectivo) : -1;
+  const indiceRentabilidad = validacion.valido ? calcularIndiceRentabilidad(
     formData.inversionInicial,
     formData.flujosEfectivo,
     formData.tasaDescuento
-  );
+  ) : 0;
   const analisisSensibilidad = calcularAnalisisSensibilidad(
     formData.inversionInicial,
     formData.flujosEfectivo,

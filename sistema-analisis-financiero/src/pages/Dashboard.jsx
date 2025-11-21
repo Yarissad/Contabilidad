@@ -43,16 +43,24 @@ const Dashboard = () => {
                 <h4 className="font-bold text-blue-900 mb-2">Proyecciones</h4>
                 <p className="text-sm text-gray-700">Regresión lineal y análisis predictivo</p>
               </div>
+              <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                <div className="text-4xl mb-3">🌊</div>
+                <h4 className="font-bold text-orange-900 mb-2">Estacionalidad</h4>
+                <p className="text-sm text-gray-700">Análisis IVE y proyecciones ajustadas</p>
+              </div>
               <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
                 <div className="text-4xl mb-3">💰</div>
                 <h4 className="font-bold text-green-900 mb-2">VAN y TIR</h4>
                 <p className="text-sm text-gray-700">Evaluación de proyectos de inversión</p>
               </div>
+              {/* RAZONES FINANCIERAS DESHABILITADO */}
+              {/*
               <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                 <div className="text-4xl mb-3">📊</div>
                 <h4 className="font-bold text-purple-900 mb-2">Razones Financieras</h4>
                 <p className="text-sm text-gray-700">Liquidez, endeudamiento y rentabilidad</p>
               </div>
+              */}
             </div>
           </div>
         </Card>
