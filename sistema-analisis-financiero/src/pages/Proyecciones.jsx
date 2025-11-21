@@ -48,9 +48,11 @@ const Proyecciones = () => {
     setProyecciones(resultado);
   };
 
-  // Preparar datos para gráficos
+  // Preparar datos para gráficos (ordenados por año)
+  const datosHistoricosOrdenados = [...historicalData].sort((a, b) => a.year - b.year);
+  
   const datosCompletos = proyecciones ? [
-    ...historicalData.map(item => ({
+    ...datosHistoricosOrdenados.map(item => ({
       year: item.year,
       valor: item[variableSeleccionada],
       tipo: 'Histórico'
@@ -60,10 +62,10 @@ const Proyecciones = () => {
       valor: item[variableSeleccionada],
       tipo: 'Proyectado'
     }))
-  ] : [];
+  ].sort((a, b) => a.year - b.year) : [];
 
-  // Datos para scatter plot (regresión)
-  const datosRegresion = historicalData.map((item, index) => {
+  // Datos para scatter plot (regresión) - usando datos ordenados
+  const datosRegresion = datosHistoricosOrdenados.map((item, index) => {
     const x = index + 1;
     const y = item[variableSeleccionada];
     const yPred = proyecciones ? (proyecciones.pendiente * x + proyecciones.interseccion) : y;
@@ -79,7 +81,7 @@ const Proyecciones = () => {
   // Agregar proyecciones al scatter
   if (proyecciones) {
     proyecciones.proyecciones.forEach((item, index) => {
-      const x = historicalData.length + index + 1;
+      const x = datosHistoricosOrdenados.length + index + 1;
       const yPred = proyecciones.pendiente * x + proyecciones.interseccion;
       datosRegresion.push({
         periodo: x,
@@ -276,7 +278,7 @@ const Proyecciones = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {historicalData.map((item) => (
+                {datosHistoricosOrdenados.map((item) => (
                   <tr key={item.year} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {item.year}

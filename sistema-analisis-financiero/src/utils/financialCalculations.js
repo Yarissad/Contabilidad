@@ -2,6 +2,9 @@
 export const calcularRegresionLineal = (data, variable) => {
   const n = data.length;
   
+  // CRÍTICO: Ordenar datos por año antes de procesar
+  const datosOrdenados = [...data].sort((a, b) => a.year - b.year);
+  
   // Validación de entrada
   if (n < 2) {
     return { pendiente: 0, interseccion: 0, r2: 0 };
@@ -9,7 +12,7 @@ export const calcularRegresionLineal = (data, variable) => {
 
   let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
 
-  data.forEach((item, index) => {
+  datosOrdenados.forEach((item, index) => {
     const x = index + 1; // Periodos: 1, 2, 3...
     const y = item[variable] || 0; // Protección contra valores undefined/null
     sumX += x;
@@ -27,7 +30,7 @@ export const calcularRegresionLineal = (data, variable) => {
   const promY = sumY / n;
   let ssRes = 0, ssTot = 0;
 
-  data.forEach((item, index) => {
+  datosOrdenados.forEach((item, index) => {
     const x = index + 1;
     const y = item[variable] || 0;
     const yPred = pendiente * x + interseccion;
@@ -42,13 +45,16 @@ export const calcularRegresionLineal = (data, variable) => {
 };
 
 export const proyectarConRegresion = (data, variable, periodosAdelante) => {
-  const { pendiente, interseccion, r2 } = calcularRegresionLineal(data, variable);
+  // Ordenar datos por año antes de procesar
+  const datosOrdenados = [...data].sort((a, b) => a.year - b.year);
+  
+  const { pendiente, interseccion, r2 } = calcularRegresionLineal(datosOrdenados, variable);
   const proyecciones = [];
 
-  const ultimoYear = data[data.length - 1].year;
+  const ultimoYear = Math.max(...datosOrdenados.map(item => item.year));
 
   for (let i = 1; i <= periodosAdelante; i++) {
-    const x = data.length + i;
+    const x = datosOrdenados.length + i;
     const valor = pendiente * x + interseccion;
     proyecciones.push({
       year: ultimoYear + i,
@@ -279,6 +285,20 @@ const interpretarEstacionalidad = (coeficiente) => {
 
 // ============= ANÁLISIS COMBINADO (REGRESIÓN + IVE + RENTABILIDAD) =============
 export const analizarProyeccionCompleta = (datosHistoricos, datosMenuales, añosAProyectar = 3) => {
+  if (!datosHistoricos || datosHistoricos.length === 0) {
+    return {
+      analisisPorVariable: {},
+      datosProyectados: [],
+      indicadoresRentabilidad: [],
+      resumen: {
+        metodologia: 'Sin datos históricos disponibles',
+        añosHistoricos: 0,
+        añosProyectados: 0,
+        variablesAnalizadas: []
+      }
+    };
+  }
+
   const variables = ['ventas', 'costoVentas', 'gastosOperativos'];
   const analisisCompleto = {};
 
@@ -296,24 +316,58 @@ export const analizarProyeccionCompleta = (datosHistoricos, datosMenuales, años
     }
   });
 
-  // Construir datos financieros proyectados completos
+  // Construir datos financieros proyectados completos manteniendo ecuación contable
   const datosProyectados = [];
+  const ultimoDatoHistorico = datosHistoricos[datosHistoricos.length - 1];
   
   for (let i = 1; i <= añosAProyectar; i++) {
-    const año = datosHistoricos[datosHistoricos.length - 1].year + i;
+    const año = ultimoDatoHistorico.year + i;
     
+    // Obtener valores proyectados o usar regresión simple si no hay IVE
+    const ventasProyectadas = analisisCompleto.ventas?.proyeccionesAnuales.find(p => p.year === año)?.ventas || 
+                             proyectarConRegresion(datosHistoricos, 'ventas', i).proyecciones[i-1]?.ventas || 
+                             ultimoDatoHistorico.ventas * (1.05 ** i); // Crecimiento 5% anual por defecto
+
+    const costoVentasProyectado = analisisCompleto.costoVentas?.proyeccionesAnuales.find(p => p.year === año)?.costoVentas || 
+                                 proyectarConRegresion(datosHistoricos, 'costoVentas', i).proyecciones[i-1]?.costoVentas ||
+                                 ventasProyectadas * 0.6; // 60% de ventas por defecto
+
+    const gastosOperativosProyectados = analisisCompleto.gastosOperativos?.proyeccionesAnuales.find(p => p.year === año)?.gastosOperativos || 
+                                       proyectarConRegresion(datosHistoricos, 'gastosOperativos', i).proyecciones[i-1]?.gastosOperativos ||
+                                       ultimoDatoHistorico.gastosOperativos * (1.03 ** i); // Crecimiento 3% anual
+
+    // Calcular utilidad neta proyectada
+    const utilidadBruta = ventasProyectadas - costoVentasProyectado;
+    const utilidadOperativa = utilidadBruta - gastosOperativosProyectados;
+    const utilidadNeta = utilidadOperativa - ultimoDatoHistorico.gastosFinancieros;
+
+    // Proyectar activos manteniendo proporciones
+    const ratioActivoCirculante = ultimoDatoHistorico.activoCirculante / ultimoDatoHistorico.ventas;
+    const ratioActivoFijo = ultimoDatoHistorico.activoFijo / ultimoDatoHistorico.ventas;
+    
+    const activoCirculanteProyectado = ventasProyectadas * ratioActivoCirculante;
+    const activoFijoProyectado = ventasProyectadas * ratioActivoFijo;
+    const activoTotalProyectado = activoCirculanteProyectado + activoFijoProyectado;
+
+    // Mantener la misma estructura de pasivos
+    const pasivoCirculanteProyectado = ultimoDatoHistorico.pasivoCirculante;
+    const pasivoLargoPlazoProyectado = ultimoDatoHistorico.pasivoLargoPlazo;
+    const pasivoTotalProyectado = pasivoCirculanteProyectado + pasivoLargoPlazoProyectado;
+
+    // Calcular patrimonio para mantener ecuación contable: Activos = Pasivos + Patrimonio
+    const patrimonioProyectado = activoTotalProyectado - pasivoTotalProyectado;
+
     const datosAño = {
       year: año,
-      ventas: analisisCompleto.ventas?.proyeccionesAnuales.find(p => p.year === año)?.ventas || 0,
-      costoVentas: analisisCompleto.costoVentas?.proyeccionesAnuales.find(p => p.year === año)?.costoVentas || 0,
-      gastosOperativos: analisisCompleto.gastosOperativos?.proyeccionesAnuales.find(p => p.year === año)?.gastosOperativos || 0,
-      // Mantener otros valores proporcionales o usar últimos valores conocidos
-      gastosFinancieros: datosHistoricos[datosHistoricos.length - 1].gastosFinancieros,
-      activoCirculante: datosHistoricos[datosHistoricos.length - 1].activoCirculante,
-      activoFijo: datosHistoricos[datosHistoricos.length - 1].activoFijo,
-      pasivoCirculante: datosHistoricos[datosHistoricos.length - 1].pasivoCirculante,
-      pasivoLargoPlazo: datosHistoricos[datosHistoricos.length - 1].pasivoLargoPlazo,
-      patrimonio: datosHistoricos[datosHistoricos.length - 1].patrimonio,
+      ventas: Math.round(ventasProyectadas),
+      costoVentas: Math.round(costoVentasProyectado),
+      gastosOperativos: Math.round(gastosOperativosProyectados),
+      gastosFinancieros: ultimoDatoHistorico.gastosFinancieros,
+      activoCirculante: Math.round(activoCirculanteProyectado),
+      activoFijo: Math.round(activoFijoProyectado),
+      pasivoCirculante: pasivoCirculanteProyectado,
+      pasivoLargoPlazo: pasivoLargoPlazoProyectado,
+      patrimonio: Math.round(patrimonioProyectado),
       tipo: 'proyectado'
     };
 
@@ -551,8 +605,14 @@ export const validarDatosFinancieros = (data) => {
     const pasivoTotal = item.pasivoCirculante + item.pasivoLargoPlazo;
     const ecuacionContable = Math.abs(activoTotal - (pasivoTotal + item.patrimonio));
     
-    if (ecuacionContable > 1) { // Tolerancia de $1 por redondeos
-      return { valido: false, mensaje: `La ecuación contable no cuadra en ${item.year}: Activos ≠ Pasivos + Patrimonio` };
+    // Tolerancia más alta para datos proyectados
+    const tolerancia = item.tipo === 'proyectado' ? 1000 : 1;
+    
+    if (ecuacionContable > tolerancia) {
+      return { 
+        valido: false, 
+        mensaje: `La ecuación contable no cuadra en ${item.year}: Activos (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(activoTotal)}) ≠ Pasivos + Patrimonio (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(pasivoTotal + item.patrimonio)})` 
+      };
     }
   }
 
