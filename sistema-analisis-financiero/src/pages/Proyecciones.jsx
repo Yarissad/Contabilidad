@@ -3,32 +3,30 @@ import { useFinancial } from '../context/FinancialContext';
 import { proyectarConRegresion, formatearMoneda, formatearPorcentaje } from '../utils/financialCalculations';
 import Card from '../components/common/Card';
 import MetricCard from '../components/common/MetricCard';
+import ValidationAlert from '../components/common/ValidationAlert';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
 
 const Proyecciones = () => {
   const { historicalData } = useFinancial();
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg shadow-lg p-8">
+        <h2 className="text-3xl font-bold mb-2">Proyecciones Financieras</h2>
+        <p className="text-purple-100">Análisis y proyecciones mediante regresión lineal</p>
+      </div>
+
+      <ValidationAlert data={historicalData}>
+        <ProyeccionesContent historicalData={historicalData} />
+      </ValidationAlert>
+    </div>
+  );
+};
+
+const ProyeccionesContent = ({ historicalData }) => {
   const [periodosProyectar, setPeriodosProyectar] = useState(3);
   const [variableSeleccionada, setVariableSeleccionada] = useState('ventas');
   const [proyecciones, setProyecciones] = useState(null);
-
-  // Validar que haya datos históricos
-  if (!historicalData || historicalData.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold mb-2">Proyecciones Financieras</h2>
-          <p className="text-purple-100">Análisis y proyecciones mediante regresión lineal</p>
-        </div>
-        <Card title="Sin Datos">
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No hay datos históricos disponibles. Por favor, agregue datos en la sección de Datos Históricos.
-            </p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   const variables = [
     { value: 'ventas', label: 'Ventas' },
@@ -92,12 +90,7 @@ const Proyecciones = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg shadow-lg p-8">
-        <h2 className="text-3xl font-bold mb-2">Proyecciones Financieras</h2>
-        <p className="text-purple-100">Análisis y proyecciones mediante regresión lineal</p>
-      </div>
-
+    <>
       {/* Controles */}
       <Card title="Configuración de Proyección">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -313,7 +306,7 @@ const Proyecciones = () => {
           </div>
         </Card>
       )}
-    </div>
+    </>
   );
 };
 

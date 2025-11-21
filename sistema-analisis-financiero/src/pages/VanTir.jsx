@@ -25,18 +25,18 @@ const VanTir = () => {
     if (name.startsWith('flujo-')) {
       const index = parseInt(name.split('-')[1]);
       const nuevosFlujos = [...formData.flujosEfectivo];
-      nuevosFlujos[index] = parseFloat(value) || 0;
+      nuevosFlujos[index] = value === '' ? '' : (parseFloat(value) || 0);
       setFormData({ ...formData, flujosEfectivo: nuevosFlujos });
     } else if (name === 'periodos') {
-      const nuevoPeriodos = parseInt(value) || 1;
+      const nuevoPeriodos = value === '' ? 1 : (parseInt(value) || 1);
       const nuevosFlujos = Array(nuevoPeriodos).fill(0).map((_, i) =>
         formData.flujosEfectivo[i] || 0
       );
       setFormData({ ...formData, periodos: nuevoPeriodos, flujosEfectivo: nuevosFlujos });
     } else if (name === 'tasaDescuento') {
-      setFormData({ ...formData, [name]: parseFloat(value) / 100 || 0 });
+      setFormData({ ...formData, [name]: value === '' ? '' : (parseFloat(value) / 100 || 0) });
     } else {
-      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+      setFormData({ ...formData, [name]: value === '' ? '' : (parseFloat(value) || 0) });
     }
   };
 

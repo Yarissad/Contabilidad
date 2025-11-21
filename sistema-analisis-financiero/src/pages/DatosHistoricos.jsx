@@ -8,15 +8,15 @@ const DatosHistoricos = () => {
 
   const [nuevoAnio, setNuevoAnio] = useState({
     year: new Date().getFullYear(),
-    ventas: 0,
-    costoVentas: 0,
-    gastosOperativos: 0,
-    gastosFinancieros: 0,
-    activoCirculante: 0,
-    activoFijo: 0,
-    pasivoCirculante: 0,
-    pasivoLargoPlazo: 0,
-    patrimonio: 0,
+    ventas: '',
+    costoVentas: '',
+    gastosOperativos: '',
+    gastosFinancieros: '',
+    activoCirculante: '',
+    activoFijo: '',
+    pasivoCirculante: '',
+    pasivoLargoPlazo: '',
+    patrimonio: '',
   });
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -27,24 +27,41 @@ const DatosHistoricos = () => {
     const { name, value } = e.target;
     setNuevoAnio(prev => ({
       ...prev,
-      [name]: name === 'year' ? parseInt(value) : parseFloat(value) || 0
+      [name]: name === 'year'
+        ? (value === '' ? '' : parseInt(value) || 0)
+        : (value === '' ? '' : parseFloat(value) || 0)
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Convertir strings vacíos a 0 antes de guardar
+    const datosLimpios = {
+      ...nuevoAnio,
+      year: parseInt(nuevoAnio.year) || new Date().getFullYear(),
+      ventas: parseFloat(nuevoAnio.ventas) || 0,
+      costoVentas: parseFloat(nuevoAnio.costoVentas) || 0,
+      gastosOperativos: parseFloat(nuevoAnio.gastosOperativos) || 0,
+      gastosFinancieros: parseFloat(nuevoAnio.gastosFinancieros) || 0,
+      activoCirculante: parseFloat(nuevoAnio.activoCirculante) || 0,
+      activoFijo: parseFloat(nuevoAnio.activoFijo) || 0,
+      pasivoCirculante: parseFloat(nuevoAnio.pasivoCirculante) || 0,
+      pasivoLargoPlazo: parseFloat(nuevoAnio.pasivoLargoPlazo) || 0,
+      patrimonio: parseFloat(nuevoAnio.patrimonio) || 0,
+    };
+
     if (modoEdicion) {
-      updateHistoricalYear(anioEditando, nuevoAnio);
+      updateHistoricalYear(anioEditando, datosLimpios);
       setModoEdicion(false);
       setAnioEditando(null);
     } else {
       // Verificar que el año no exista ya
-      if (historicalData.some(item => item.year === nuevoAnio.year)) {
+      if (historicalData.some(item => item.year === datosLimpios.year)) {
         alert('Este año ya existe. Por favor usa la opción de editar o elige otro año.');
         return;
       }
-      addHistoricalYear(nuevoAnio);
+      addHistoricalYear(datosLimpios);
     }
 
     setMostrarFormulario(false);
@@ -54,15 +71,15 @@ const DatosHistoricos = () => {
   const resetForm = () => {
     setNuevoAnio({
       year: new Date().getFullYear(),
-      ventas: 0,
-      costoVentas: 0,
-      gastosOperativos: 0,
-      gastosFinancieros: 0,
-      activoCirculante: 0,
-      activoFijo: 0,
-      pasivoCirculante: 0,
-      pasivoLargoPlazo: 0,
-      patrimonio: 0,
+      ventas: '',
+      costoVentas: '',
+      gastosOperativos: '',
+      gastosFinancieros: '',
+      activoCirculante: '',
+      activoFijo: '',
+      pasivoCirculante: '',
+      pasivoLargoPlazo: '',
+      patrimonio: '',
     });
   };
 

@@ -604,14 +604,14 @@ export const validarDatosFinancieros = (data) => {
     const activoTotal = item.activoCirculante + item.activoFijo;
     const pasivoTotal = item.pasivoCirculante + item.pasivoLargoPlazo;
     const ecuacionContable = Math.abs(activoTotal - (pasivoTotal + item.patrimonio));
-    
-    // Tolerancia más alta para datos proyectados
-    const tolerancia = item.tipo === 'proyectado' ? 1000 : 1;
-    
+
+    // Tolerancia: 100 pesos para datos históricos, 1000 para proyectados
+    const tolerancia = item.tipo === 'proyectado' ? 1000 : 100;
+
     if (ecuacionContable > tolerancia) {
-      return { 
-        valido: false, 
-        mensaje: `La ecuación contable no cuadra en ${item.year}: Activos (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(activoTotal)}) ≠ Pasivos + Patrimonio (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(pasivoTotal + item.patrimonio)})` 
+      return {
+        valido: false,
+        mensaje: `La ecuación contable no cuadra en ${item.year}: Activos (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(activoTotal)}) ≠ Pasivos + Patrimonio (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(pasivoTotal + item.patrimonio)}). Diferencia: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(ecuacionContable)}`
       };
     }
   }
