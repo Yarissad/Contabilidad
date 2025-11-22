@@ -4,6 +4,7 @@ import {
   calcularIVE,
   proyectarConIVE,
   analizarProyeccionCompleta,
+  proyectarVentasMensualesConMeta,
   formatearMoneda,
   formatearPorcentaje
 } from '../utils/financialCalculations';
@@ -19,6 +20,12 @@ const Estacionalidad = () => {
   const [añosAProyectar, setAñosAProyectar] = useState(3);
   const [variableAnalisis, setVariableAnalisis] = useState('ventas');
   const [analisisCompleto, setAnalisisCompleto] = useState(null);
+  
+  // Estados para la proyección con meta anual
+  const [mostrarProyeccionMeta, setMostrarProyeccionMeta] = useState(false);
+  const [metaAnual, setMetaAnual] = useState('');
+  const [añoMeta, setAñoMeta] = useState(new Date().getFullYear() + 1);
+  const [proyeccionConMeta, setProyeccionConMeta] = useState(null);
 
   // Datos mensuales de ejemplo basados en tu tabla
   const datosEjemplo = [
@@ -78,6 +85,24 @@ const Estacionalidad = () => {
     }
   }, [historicalData, datosMenuales, añosAProyectar]);
 
+  // Función para calcular proyección con meta anual
+  const calcularProyeccionConMeta = () => {
+    if (datosMenuales.length > 0 && metaAnual && parseFloat(metaAnual) > 0) {
+      const resultado = proyectarVentasMensualesConMeta(
+        datosMenuales, 
+        parseFloat(metaAnual), 
+        añoMeta
+      );
+      setProyeccionConMeta(resultado);
+    }
+  };
+
+  useEffect(() => {
+    if (metaAnual && parseFloat(metaAnual) > 0) {
+      calcularProyeccionConMeta();
+    }
+  }, [metaAnual, añoMeta, datosMenuales]);
+
   const resultadoIVE = datosMenuales.length > 0 ? calcularIVE(datosMenuales) : null;
 
   return (
@@ -101,6 +126,13 @@ const Estacionalidad = () => {
           analisisCompleto={analisisCompleto}
           resultadoIVE={resultadoIVE}
           datosEjemplo={datosEjemplo}
+          mostrarProyeccionMeta={mostrarProyeccionMeta}
+          setMostrarProyeccionMeta={setMostrarProyeccionMeta}
+          metaAnual={metaAnual}
+          setMetaAnual={setMetaAnual}
+          añoMeta={añoMeta}
+          setAñoMeta={setAñoMeta}
+          proyeccionConMeta={proyeccionConMeta}
         />
       </ValidationAlert>
     </div>
@@ -110,7 +142,8 @@ const Estacionalidad = () => {
 const EstacionalidadContent = ({ 
   historicalData, datosMenuales, setDatosMenuales, mostrarFormulario, setMostrarFormulario,
   añosAProyectar, setAñosAProyectar, variableAnalisis, setVariableAnalisis, 
-  analisisCompleto, resultadoIVE, datosEjemplo 
+  analisisCompleto, resultadoIVE, datosEjemplo, mostrarProyeccionMeta, setMostrarProyeccionMeta,
+  metaAnual, setMetaAnual, añoMeta, setAñoMeta, proyeccionConMeta 
 }) => {
 
   const cargarDatosEjemplo = () => {
@@ -167,6 +200,12 @@ const EstacionalidadContent = ({
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Datos Ejemplo
+            </button>
+            <button
+              onClick={() => setMostrarProyeccionMeta(!mostrarProyeccionMeta)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              {mostrarProyeccionMeta ? 'Ocultar' : 'Proyectar'} Con Meta
             </button>
           </div>
         </div>
@@ -245,6 +284,54 @@ const EstacionalidadContent = ({
             >
               + Agregar Mes
             </button>
+          </div>
+        )}
+
+        {/* Sección de Proyección con Meta Anual */}
+        {mostrarProyeccionMeta && (
+          <div className="border-t pt-6 mt-6">
+            <h4 className="text-lg font-semibold mb-4 text-green-800">
+              🎯 Proyección Mensual con Meta Anual
+            </h4>
+            <div className="bg-green-50 p-4 rounded-lg mb-4">
+              <p className="text-sm text-gray-700 mb-2">
+                <strong>¿Cómo funciona?</strong> Ingresa tu meta de ventas para el próximo año y el sistema 
+                calculará automáticamente cuánto debes vender cada mes basándose en los patrones estacionales históricos.
+              </p>
+              <p className="text-sm text-gray-600">
+                Por ejemplo: Si tu meta es $200,000 y diciembre históricamente representa el 12% de las ventas anuales, 
+                el sistema te dirá que debes vender $24,000 en diciembre.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta de Ventas Anual
+                </label>
+                <input
+                  type="number"
+                  value={metaAnual}
+                  onChange={(e) => setMetaAnual(e.target.value)}
+                  placeholder="Ej: 200000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Año de Proyección
+                </label>
+                <input
+                  type="number"
+                  value={añoMeta}
+                  onChange={(e) => setAñoMeta(parseInt(e.target.value))}
+                  min={new Date().getFullYear()}
+                  max={new Date().getFullYear() + 10}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
           </div>
         )}
       </Card>
@@ -437,6 +524,150 @@ const EstacionalidadContent = ({
             </div>
           )}
         </Card>
+      )}
+
+      {/* Resultados de Proyección con Meta Anual */}
+      {proyeccionConMeta && proyeccionConMeta.proyeccionMensual.length > 0 && (
+        <>
+          <Card title={`🎯 Distribución Mensual para Meta de ${formatearMoneda(proyeccionConMeta.resumen.metaAnual)} en ${proyeccionConMeta.resumen.añoProyeccion}`}>
+            <div className="mb-4 p-4 bg-green-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Meta Anual</p>
+                  <p className="text-lg font-semibold text-green-700">
+                    {formatearMoneda(proyeccionConMeta.resumen.metaAnual)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Proyectado</p>
+                  <p className="text-lg font-semibold text-blue-700">
+                    {formatearMoneda(proyeccionConMeta.resumen.totalProyectado)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Diferencia</p>
+                  <p className={`text-lg font-semibold ${
+                    Math.abs(proyeccionConMeta.resumen.diferencia) < 100 ? 'text-green-700' : 'text-orange-700'
+                  }`}>
+                    {formatearMoneda(proyeccionConMeta.resumen.diferencia)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Gráfico de Ventas Mensuales Proyectadas */}
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={proyeccionConMeta.proyeccionMensual}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="nombreMes" angle={-45} textAnchor="end" height={80} />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => [formatearMoneda(value), 'Ventas Proyectadas']}
+                  labelFormatter={(label) => `Mes: ${label}`}
+                />
+                <Legend />
+                <Bar dataKey="ventas" fill="#10b981" name="Ventas Proyectadas" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          {/* Tabla Detallada de Proyección Mensual */}
+          <Card title="📅 Calendario de Ventas Mensuales">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mes</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ventas Proyectadas</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IVE</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% del Año</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acumulado</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {proyeccionConMeta.proyeccionMensual.map((mes, index) => {
+                    const acumulado = proyeccionConMeta.proyeccionMensual
+                      .slice(0, index + 1)
+                      .reduce((sum, m) => sum + m.ventas, 0);
+                    
+                    return (
+                      <tr key={mes.mes} className="hover:bg-green-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {mes.nombreMes} {mes.year}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                          {formatearMoneda(mes.ventas)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {mes.ive.toFixed(3)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                          {formatearPorcentaje(mes.porcentajeDelAño)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">
+                          {formatearMoneda(acumulado)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <h5 className="font-semibold text-blue-800 mb-2">💡 Cómo usar esta información:</h5>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• <strong>Ventas Proyectadas:</strong> Meta específica para cada mes</li>
+                <li>• <strong>IVE:</strong> Factor estacional (&gt;1.0 = mes alto, &lt;1.0 = mes bajo)</li>
+                <li>• <strong>% del Año:</strong> Proporción que representa cada mes del total anual</li>
+                <li>• <strong>Acumulado:</strong> Total acumulado hasta ese mes para seguimiento</li>
+              </ul>
+            </div>
+          </Card>
+
+          {/* Comparación con Patrones Históricos */}
+          {resultadoIVE && (
+            <Card title="📊 Comparación: Proyección vs Patrón Histórico">
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={proyeccionConMeta.proyeccionMensual.map((mes, index) => ({
+                  ...mes,
+                  promedioHistorico: resultadoIVE.ive[index]?.promedio || 0
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="nombreMes" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip formatter={(value, name) => [
+                    formatearMoneda(value), 
+                    name === 'ventas' ? 'Proyección con Meta' : 'Promedio Histórico'
+                  ]} />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="ventas" 
+                    stroke="#10b981" 
+                    strokeWidth={3}
+                    name="Proyección con Meta" 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="promedioHistorico" 
+                    stroke="#6b7280" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    name="Promedio Histórico" 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  Esta gráfica te permite comparar tu meta mensual (línea verde sólida) con el comportamiento 
+                  histórico promedio (línea gris punteada). Las diferencias muestran si tu meta es más ambiciosa 
+                  o conservadora que los patrones históricos.
+                </p>
+              </div>
+            </Card>
+          )}
+        </>
       )}
     </>
   );

@@ -261,6 +261,71 @@ const getNombreMes = (mes) => {
   return meses[mes - 1] || 'Desconocido';
 };
 
+// ============= PROYECCIÓN MENSUAL CON IVE Y META ANUAL =============
+export const proyectarVentasMensualesConMeta = (datosMenuales, metaAnual, añoProyeccion) => {
+  // Validación de entrada
+  if (!datosMenuales || datosMenuales.length === 0 || !metaAnual || metaAnual <= 0) {
+    return {
+      proyeccionMensual: [],
+      ive: null,
+      resumen: {
+        metaAnual,
+        añoProyeccion,
+        totalProyectado: 0,
+        diferencia: 0
+      }
+    };
+  }
+
+  // Calcular IVE primero
+  const resultadoIVE = calcularIVE(datosMenuales);
+  
+  // Distribuir la meta anual usando los índices IVE
+  const proyeccionMensual = [];
+  let totalProyectado = 0;
+  
+  resultadoIVE.ive.forEach(mesIVE => {
+    // Calcular ventas mensuales: (Meta Anual / 12) * IVE del mes
+    const ventasDelMes = (metaAnual / 12) * mesIVE.ive;
+    totalProyectado += ventasDelMes;
+    
+    proyeccionMensual.push({
+      year: añoProyeccion,
+      month: mesIVE.mes,
+      nombreMes: mesIVE.nombreMes,
+      ventas: Math.round(ventasDelMes),
+      ive: mesIVE.ive,
+      porcentajeDelAño: (ventasDelMes / metaAnual) * 100,
+      tipo: 'proyectado'
+    });
+  });
+
+  // Ajustar para que la suma exacta sea igual a la meta anual
+  const diferencia = metaAnual - totalProyectado;
+  if (Math.abs(diferencia) > 1) {
+    // Distribuir la diferencia proporcionalmente
+    proyeccionMensual.forEach(mes => {
+      const ajuste = (mes.ventas / totalProyectado) * diferencia;
+      mes.ventas = Math.round(mes.ventas + ajuste);
+    });
+  }
+
+  // Recalcular total después del ajuste
+  const totalFinal = proyeccionMensual.reduce((sum, mes) => sum + mes.ventas, 0);
+
+  return {
+    proyeccionMensual,
+    ive: resultadoIVE,
+    resumen: {
+      metaAnual,
+      añoProyeccion,
+      totalProyectado: totalFinal,
+      diferencia: metaAnual - totalFinal,
+      metodologia: 'Distribución con IVE personalizada'
+    }
+  };
+};
+
 const interpretarEstacionalidad = (coeficiente) => {
   if (coeficiente < 5) {
     return {
