@@ -620,14 +620,14 @@ export const calcularPuntoEquilibrio = (ventas, costosVentas, gastosOperativos, 
 export const formatearMoneda = (valor) => {
   // Validación de entrada
   if (typeof valor !== 'number' || isNaN(valor)) {
-    return '$0';
+    return 'Q0';
   }
-  
-  return new Intl.NumberFormat('es-MX', {
+
+  return new Intl.NumberFormat('es-GT', {
     style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    currency: 'GTQ',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(valor);
 };
 
@@ -676,7 +676,7 @@ export const validarDatosFinancieros = (data) => {
     if (ecuacionContable > tolerancia) {
       return {
         valido: false,
-        mensaje: `La ecuación contable no cuadra en ${item.year}: Activos (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(activoTotal)}) ≠ Pasivos + Patrimonio (${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(pasivoTotal + item.patrimonio)}). Diferencia: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(ecuacionContable)}`
+        mensaje: `La ecuación contable no cuadra en ${item.year}: Activos (${new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', minimumFractionDigits: 2 }).format(activoTotal)}) ≠ Pasivos + Patrimonio (${new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', minimumFractionDigits: 2 }).format(pasivoTotal + item.patrimonio)}). Diferencia: ${new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', minimumFractionDigits: 2 }).format(ecuacionContable)}`
       };
     }
   }
